@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Interractive graph</title>
+    <script src="D:/SEM3/lab3/frontend/Chart.bundle.min.js"></script>
+
+    <style>
+        .parent > div {
+            background: #eee;
+            float: left;
+            margin-right: 2%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+    
+        #all_information {
+            overflow-y: scroll;
+            overflow-x: scroll;
+        }
+    
+        #mynetwork {
+            width: 800px;
+            height: 800px;
+            border: 1px solid lightgray;
+        }
+    
+        table, td, th {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="parent">
+        <div id="mynetwork"></div>
+        <div id="all_information"></div>
+    </div>
+    <link rel="stylesheet" type="text/css" href="D:/SEM3/lab3/frontend/vis.min.css">
+    <script src="D:/SEM3/lab3/frontend/vis.min.js"></script>
+    <script src="D:/SEM3/lab3/frontend/axios.min.js"></script>
+    <script>
+        var nodes = new vis.DataSet([
+            {
+                id: 1, label: "Log Start", "node_size": 30,
+                count_by_timeperiod: { 'от 1 до 3 лет': 1977, 'от 30 до 90 дней': 1988, 'от 90 дней до 1 года': 3763, 'свыше 3 лет': 980 }
+            }, {
+                id: 2, label: "Event_1", "node_size": 30,
+                count_by_timeperiod: { 'от 1 до 3 лет': 1977, 'от 30 до 90 дней': 1988, 'от 90 дней до 1 года': 3763, 'свыше 3 лет': 980 }
+            }, {
+                id: 3, label: "Event_2", "node_size": 29,
+                count_by_timeperiod: { 'от 1 до 3 лет': 1975, 'от 30 до 90 дней': 1986, 'от 90 дней до 1 года': 3759, 'свыше 3 лет': 974 }
+            }, {
+                id: 4, label: "Event_3", "node_size": 2,
+                count_by_timeperiod: { 'от 1 до 3 лет': 196, 'от 30 до 90 дней': 4, 'от 90 дней до 1 года': 41, 'свыше 3 лет': 163 }
+            }, {
+                id: 5, label: "Event_4", "node_size": 30,
+                count_by_timeperiod: { 'от 1 до 3 лет': 1977, 'от 30 до 90 дней': 1988, 'от 90 дней до 1 года': 3763, 'свыше 3 лет': 980 }
+            }, {
+                id: 6, label: "Event_5", "node_size": 29,
+                count_by_timeperiod: { 'от 1 до 3 лет': 1868, 'от 30 до 90 дней': 1929, 'от 90 дней до 1 года': 3720, 'свыше 3 лет': 931 }
+            }, {
+                id: 7, label: "Event_6", "node_size": 2,
+                count_by_timeperiod: { 'от 1 до 3 лет': 384, 'от 30 до 90 дней': 5, 'от 90 дней до 1 года': 132, 'свыше 3 лет': 84 }
+            }, {
+                id: 8, label: "Event_7", "node_size": 2,
+                count_by_timeperiod: { 'от 1 до 3 лет': 514, 'от 30 до 90 дней': 5, 'от 90 дней до 1 года': 167, 'свыше 3 лет': 104 }
+            }, {
+                id: 9, label: "Event_8", "node_size": 2,
+                count_by_timeperiod: { 'от 1 до 3 лет': 26, 'от 30 до 90 дней': 17, 'от 90 дней до 1 года': 49, 'свыше 3 лет': 88 }
+            }, {
+                id: 10, label: "Log End", "node_size": 30,
+                count_by_timeperiod: { 'от 1 до 3 лет': 1977, 'от 30 до 90 дней': 1988, 'от 90 дней до 1 года': 3763, 'свыше 3 лет': 980 }
+            },]);
+        var edges = new vis.DataSet([{
+            from: 1, to: 2, arrows: "to",
+            edge_size: 1,
+            count_by_timeperiod: { 'от 1 до 3 лет': 2, 'от 30 до 90 дней': 2, 'от 90 дней до 1 года': 4, 'свыше 3 лет': 6 },
+        }, {
+            from: 1, to: 3, arrows: "to",
+            edge_size: 10,
+            count_by_timeperiod: { 'от 1 до 3 лет': 1975, 'от 30 до 90 дней': 1986, 'от 90 дней до 1 года': 3759, 'свыше 3 лет': 974 },
+        }, {
+            from: 2, to: 4, arrows: "to",
+            edge_size: 1,
+            count_by_timeperiod: { 'от 1 до 3 лет': 9, 'от 30 до 90 дней': 1, 'свыше 3 лет': 37 },
+        }, {
+            from: 2, to: 5, arrows: "to",
+            edge_size: 1,
+            count_by_timeperiod: { 'от 1 до 3 лет': 109, 'от 30 до 90 дней': 59, 'от 90 дней до 1 года': 43, 'свыше 3 лет': 49 },
+        }, {
+            from: 2, to: 6, arrows: "to",
+            edge_size: 9,
+            count_by_timeperiod: { 'от 1 до 3 лет': 1858, 'от 30 до 90 дней': 1928, 'от 90 дней до 1 года': 3718, 'свыше 3 лет': 881 },
+        }, {
+            from: 2, to: 9, arrows: "to",
+            edge_size: 1,
+            count_by_timeperiod: { 'от 1 до 3 лет': 1, 'от 90 дней до 1 года': 2, 'свыше 3 лет': 13 },
+        }, {
+            from: 3, to: 2, arrows: "to",
+            edge_size: 9,
+            count_by_timeperiod: { 'от 1 до 3 лет': 1969, 'от 30 до 90 дней': 1969, 'от 90 дней до 1 года': 3731, 'свыше 3 лет': 955 },
+        }, {
+            from: 3, to: 9, arrows: "to",
+            edge_size: 1,
+            count_by_timeperiod: { 'от 1 до 3 лет': 6, 'от 30 до 90 дней': 17, 'от 90 дней до 1 года': 28, 'свыше 3 лет': 19 },
+        }, {
+            from: 4, to: 10, arrows: "to",
+            edge_size: 1,
+            count_by_timeperiod: { 'от 1 до 3 лет': 173, 'от 30 до 90 дней': 3, 'от 90 дней до 1 года': 18, 'свыше 3 лет': 126 },
+        }, {
+            from: 4, to: 6, arrows: "to",
+            edge_size: 1,
+            count_by_timeperiod: { 'от 1 до 3 лет': 9, 'от 30 до 90 дней': 1, 'свыше 3 лет': 37 },
+        }, {
+            from: 4, to: 8, arrows: "to",
+            edge_size: 1,
+            count_by_timeperiod: { 'от 1 до 3 лет': 14, 'от 90 дней до 1 года': 23 },
+        }, {
+            from: 5, to: 10, arrows: "to",
+            edge_size: 8,
+            count_by_timeperiod: { 'от 1 до 3 лет': 1325, 'от 30 до 90 дней': 1980, 'от 90 дней до 1 года': 3559, 'свыше 3 лет': 721 },
+        }, {
+            from: 5, to: 4, arrows: "to",
+            edge_size: 1,
+            count_by_timeperiod: { 'от 1 до 3 лет': 135, 'от 30 до 90 дней': 3, 'от 90 дней до 1 года': 41, 'свыше 3 лет': 101 },
+        }, {
+            from: 5, to: 8, arrows: "to",
+            edge_size: 1,
+            count_by_timeperiod: { 'от 1 до 3 лет': 499, 'от 30 до 90 дней': 5, 'от 90 дней до 1 года': 144, 'свыше 3 лет': 102 },
+        }, {
+            from: 5, to: 9, arrows: "to",
+            edge_size: 1,
+            count_by_timeperiod: { 'от 1 до 3 лет': 18, 'от 90 дней до 1 года': 19, 'свыше 3 лет': 56 },
+        }, {
+            from: 6, to: 5, arrows: "to",
+            edge_size: 9,
+            count_by_timeperiod: { 'от 1 до 3 лет': 1868, 'от 30 до 90 дней': 1929, 'от 90 дней до 1 года': 3720, 'свыше 3 лет': 931 },
+        }, {
+            from: 7, to: 10, arrows: "to",
+            edge_size: 1,
+            count_by_timeperiod: { 'от 1 до 3 лет': 331, 'от 30 до 90 дней': 5, 'от 90 дней до 1 года': 132, 'свыше 3 лет': 60 },
+        }, {
+            from: 7, to: 4, arrows: "to",
+            edge_size: 1,
+            count_by_timeperiod: { 'от 1 до 3 лет': 52, 'свыше 3 лет': 24 },
+        }, {
+            from: 7, to: 9, arrows: "to",
+            edge_size: 1,
+            count_by_timeperiod: { 'от 1 до 3 лет': 1 },
+        }, {
+            from: 8, to: 10, arrows: "to",
+            edge_size: 1,
+            count_by_timeperiod: { 'от 1 до 3 лет': 130, 'от 90 дней до 1 года': 35, 'свыше 3 лет': 20 },
+        }, {
+            from: 8, to: 7, arrows: "to",
+            edge_size: 1,
+            count_by_timeperiod: { 'от 1 до 3 лет': 384, 'от 30 до 90 дней': 5, 'от 90 дней до 1 года': 132, 'свыше 3 лет': 84 },
+        }, {
+            from: 9, to: 10, arrows: "to",
+            edge_size: 1,
+            count_by_timeperiod: { 'от 1 до 3 лет': 18, 'от 90 дней до 1 года': 19, 'свыше 3 лет': 53 },
+        }, {
+            from: 9, to: 2, arrows: "to",
+            edge_size: 1,
+            count_by_timeperiod: { 'от 1 до 3 лет': 6, 'от 30 до 90 дней': 17, 'от 90 дней до 1 года': 28, 'свыше 3 лет': 19 },
+        }, {
+            from: 9, to: 4, arrows: "to",
+            edge_size: 1,
+            count_by_timeperiod: { 'свыше 3 лет': 1 },
+        }, {
+            from: 9, to: 6, arrows: "to",
+            edge_size: 1,
+            count_by_timeperiod: { 'от 1 до 3 лет': 1, 'от 90 дней до 1 года': 2, 'свыше 3 лет': 13 },
+        }, {
+            from: 9, to: 8, arrows: "to",
+            edge_size: 1,
+            count_by_timeperiod: { 'от 1 до 3 лет': 1, 'свыше 3 лет': 2 },
+        },]);
+
+        var container = document.getElementById('mynetwork');
+        var data = {
+            nodes: nodes,
+            edges: edges
+        };
+        var options = {
+            "physics": {
+                "barnesHut": {
+                    "gravitationalConstant": -4000,
+                    "springConstant": 0.006,
+                    "damping": 0.02
+                },
+                "repulsion": { "nodeDistance": 300 }
+            }
+        };
+
+        var network = new vis.Network(container, data, options);
+        var res_container = document.getElementById('all_information');
+
+        network.on('click', function (properties) {
+            var clickedNodes = nodes.get(properties.nodes);
+            var clickedEdges = edges.get(properties.edges);
+            //определение типа объекта (вершина/ребро) на котором произошло событие
+            var clickedObject = clickedNodes.length == 0 ? clickedEdges[0] : clickedNodes[0];
+            var count_by_timeperiod = clickedObject['count_by_timeperiod'];
+
+            var cbp_labels = Object.keys(count_by_timeperiod); // total sum by timeperiod
+            var cbp_values = Object.values(count_by_timeperiod);
+            showChart('myChart', cbp_labels, cbp_values, "Длительность исполнения ");
+        });
+
+        function showChart(canvas_id, labels_list, values_list, legend) {
+            //удаляем элемент, чтобы очистить контекст
+            var elem = document.getElementById(canvas_id);
+            if (elem != null) {
+                elem.remove(elem);
+            }
+            //создаём элемент заново, чтобы забрать контекст заново
+            let canvas = document.createElement('canvas');
+            canvas.setAttribute('id', canvas_id);
+            canvas.style.width = "500px";
+            canvas.style.height = "300px";
+            res_container.append(canvas);
+            var element = document.getElementById(canvas_id);
+            var ctx = element.getContext('2d');
+            var myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels_list,
+                    datasets: [{
+                        label: legend,
+                        data: values_list,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    legend: { display: false },
+                    title: {
+                        display: true,
+                        text: legend,
+                        position: 'top',
+                        fontSize: 16,
+                        padding: 0
+                    },
+                    scales: {
+                        yAxes: [{ ticks: { min: 0 } }]
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

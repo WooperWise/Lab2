@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Interractive graph</title>
+    <script src="D:/SEM3/lab3/frontend/Chart.bundle.min.js"></script>
+
+    <style>
+        .parent > div {
+            background: #eee;
+            float: left;
+            margin-right: 2%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+
+        #all_information {
+            overflow-y: scroll;
+            overflow-x: scroll;
+        }
+
+        #mynetwork {
+            width: 800px;
+            height: 800px;
+            border: 1px solid lightgray;
+        }
+
+        table, td, th {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="create">
+        <button id="ButtonCreateORGraph" onclick="createORGraph();">Create ORGraph</button>
+        <input id="input1" placeholder="Enter count of nodes" name="name1" />
+    </div>
+
+    <div id="theBestWay">
+        <button id="ButtonTheBestWay" onclick="theBestWay();">The Best Way</button>
+        <input id="input2" placeholder="Enter start" name="name2" />
+        <input id="input3" placeholder="Enter end" name="name3" />
+        <p id="way"></p>
+    </div>
+
+    <div id="inverse">
+        <button id="ButtonInverse" onclick="inverse();">Inverse ORGraph</button>
+        <button id="ButtonNoInverse" onclick="noInverse();">No inverse ORGraph</button>
+    </div>
+
+    <div id="FSC">
+        <button id="ButtonFindStrongComponents" onclick="findStrongComponents();">Find Strong Components</button>
+        <p id="components"></p>
+    </div>
+
+    <p id="time"></p>
+
+    <div class="parent">
+        <div id="mynetwork"></div>
+    </div>
+
+    <link rel="stylesheet" type="text/css" href="D:/SEM3/lab3/frontend/vis.min.css">
+
+    <script src="D:/SEM3/lab3/frontend/vis.min.js"></script>
+    <script src="D:/SEM3/lab3/frontend/axios.min.js"></script>
+
+    <script>
+
+        document.getElementById("theBestWay").hidden = true;
+        document.getElementById("inverse").hidden = true;
+        document.getElementById("FSC").hidden = true;
+        document.getElementById("mynetwork").hidden = true;
+
+        const input1 = document.getElementById('input1');
+        const input2 = document.getElementById('input2');
+        const input3 = document.getElementById('input3');
+
+        var a, b, c
+
+        input1.addEventListener('input', updateValueforA);
+        input2.addEventListener('input', updateValueforB);
+        input3.addEventListener('input', updateValueforC);
+
+        function updateValueforA(e) {
+            a = e.target.value;
+        }
+        function updateValueforB(e) {
+            b = e.target.value;
+        }
+        function updateValueforC(e) {
+            c = e.target.value;
+        }
+
+        async function createORGraph() {
+            document.getElementById("theBestWay").hidden = false;
+            document.getElementById("inverse").hidden = false;
+            document.getElementById("FSC").hidden = false;
+            document.getElementById("mynetwork").hidden = false;
+            var q = await axios.get("http://127.0.0.1:1337/CreateORGraph/" + a);
+
+            var log = document.getElementById('time');
+            log.textContent = "Time create: " + q.data['Time'][0];
+
+            var nodes = new vis.DataSet();
+            var edges = new vis.DataSet();
+
+            for (var i = 0; i < Object.keys(q.data['Nodes']).length; i++) {
+                nodes.add([
+                    {
+                        id: i,
+                        label: q.data['Nodes'][i],
+                    },]);
+            }
+            for (var i = 0; i < Object.keys(q.data['From']).length; i++) {
+                edges.add([
+                    {
+                        from: q.data['From'][i],
+                        to: q.data['To'][i],
+                        arrows: "to",
+                        title: q.data['Weight'][i],
+                    },]);
+            }
+            
+            var container = document.getElementById('mynetwork');
+
+            var data = {
+                nodes: nodes,
+                edges: edges
+            };
+
+            var options = {
+                "physics": {
+                    "barnesHut": {
+                        "gravitationalConstant": -4000,
+                        "springConstant": 0.006,
+                        "damping": 0.02
+                    },
+                    "repulsion": { "nodeDistance": 300 }
+                }
+            };
+
+            var network = new vis.Network(container, data, options);
+
+            network.on('click', function (properties) {
+                var clickedNodes = nodes.get(properties.nodes);
+                var clickedEdges = edges.get(properties.edges);
+                //определение типа объекта (вершина/ребро) на котором произошло событие
+                var clickedObject = clickedNodes.length == 0 ? clickedEdges[0] : clickedNodes[0];
+            });
+
+        }
+
+        async function theBestWay() {
+            document.getElementById("components").hidden = true;
+            document.getElementById("way").hidden = false;
+            var q = await axios.get("http://127.0.0.1:1337/ORGraphTheBestWay/" + b + "/" + c);
+            var log = document.getElementById('way');
+            if (q.data['TheBestWay'][0] > 10000) {
+                log.textContent = "The best way: no";
+            } else {
+                log.textContent = "The best way: " + q.data['TheBestWay'][0]
+            }
+            log = document.getElementById('time');
+            log.textContent = "Time find the best way: " + q.data['Time'][0];
+        }
+
+        async function findStrongComponents() {
+            document.getElementById("way").hidden = true;
+            document.getElementById("components").hidden = false;
+            var tmp = document.getElementById("components");
+            while (tmp.firstChild) {
+                tmp.removeChild(tmp.lastChild);
+            }
+
+            var q = await axios.get("http://127.0.0.1:1337/ORGraphFindStrongComponents");
+            console.log(q.data['FSC']);
+            var log = document.getElementById('components');
+            for (var i = 0; i < Object.keys(q.data['FSC']).length; i++) {
+                var p = document.createElement("p");
+                p.textContent = q.data['FSC'][i];
+                log.appendChild(p);
+            }
+            log = document.getElementById('time');
+            log.textContent = "Time find strong components: " + q.data['Time'][0];
+        }
+
+        async function inverse() {
+            document.getElementById("way").hidden = true;
+            document.getElementById("components").hidden = true;
+
+            var q = await axios.get("http://127.0.0.1:1337/ORGraphInverse");
+
+            var log = document.getElementById('time');
+            log.textContent = "Time inverse: " + q.data['Time'][0];
+
+            var nodes = new vis.DataSet();
+            var edges = new vis.DataSet();
+
+            for (var i = 0; i < Object.keys(q.data['Nodes']).length; i++) {
+                nodes.add([
+                    {
+                        id: i,
+                        label: q.data['Nodes'][i],
+                    },]);
+            }
+            for (var i = 0; i < Object.keys(q.data['From']).length; i++) {
+                edges.add([
+                    {
+                        from: q.data['From'][i],
+                        to: q.data['To'][i],
+                        arrows: "to",
+                        title: q.data['Weight'][i],
+                    },]);
+            }
+
+            var container = document.getElementById('mynetwork');
+
+            var data = {
+                nodes: nodes,
+                edges: edges
+            };
+
+            var options = {
+                "physics": {
+                    "barnesHut": {
+                        "gravitationalConstant": -4000,
+                        "springConstant": 0.006,
+                        "damping": 0.02
+                    },
+                    "repulsion": { "nodeDistance": 300 }
+                }
+            };
+
+            var network = new vis.Network(container, data, options);
+
+            network.on('click', function (properties) {
+                var clickedNodes = nodes.get(properties.nodes);
+                var clickedEdges = edges.get(properties.edges);
+                //определение типа объекта (вершина/ребро) на котором произошло событие
+                var clickedObject = clickedNodes.length == 0 ? clickedEdges[0] : clickedNodes[0];
+            });
+        }
+
+        async function noInverse() {
+            document.getElementById("way").hidden = true;
+            document.getElementById("components").hidden = true;
+
+            var q = await axios.get("http://127.0.0.1:1337/ORGraphNoInverse");
+
+            var log = document.getElementById('time');
+            log.textContent = "Time return: " + q.data['Time'][0];
+
+            var nodes = new vis.DataSet();
+            var edges = new vis.DataSet();
+
+            for (var i = 0; i < Object.keys(q.data['Nodes']).length; i++) {
+                nodes.add([
+                    {
+                        id: i,
+                        label: q.data['Nodes'][i],
+                    },]);
+            }
+            for (var i = 0; i < Object.keys(q.data['From']).length; i++) {
+                edges.add([
+                    {
+                        from: q.data['From'][i],
+                        to: q.data['To'][i],
+                        arrows: "to",
+                        title: q.data['Weight'][i],
+                    },]);
+            }
+
+            var container = document.getElementById('mynetwork');
+
+            var data = {
+                nodes: nodes,
+                edges: edges
+            };
+
+            var options = {
+                "physics": {
+                    "barnesHut": {
+                        "gravitationalConstant": -4000,
+                        "springConstant": 0.006,
+                        "damping": 0.02
+                    },
+                    "repulsion": { "nodeDistance": 300 }
+                }
+            };
+
+            var network = new vis.Network(container, data, options);
+
+            network.on('click', function (properties) {
+                var clickedNodes = nodes.get(properties.nodes);
+                var clickedEdges = edges.get(properties.edges);
+                //определение типа объекта (вершина/ребро) на котором произошло событие
+                var clickedObject = clickedNodes.length == 0 ? clickedEdges[0] : clickedNodes[0];
+            });
+        }
+    </script>
+</body>
+</html>
